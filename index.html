@@ -301,8 +301,9 @@
       /* Content max width + centered */
       .page-inner{max-width:860px;margin:0 auto;width:100%}
 
-      /* TODAY: 2-column grid */
-      .today-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+      /* TODAY: date block full-width centered, then 2-column below */
+      .today-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr;gap:20px;align-items:start}
+      .today-grid-top{grid-column:1 / -1;display:flex;flex-direction:column;align-items:center}
       .today-grid-left{min-width:0}
       .today-grid-right{min-width:0}
 
@@ -1035,7 +1036,7 @@ function renderToday(){
   const dt=dayNumToDate(dn),hasNote=!!STATE.notes[dn];
   const pct=total?Math.round(checkedCount/total*100):0;
 
-  let leftCol=`
+  let topRow=`
     <div class="today-date-block">
       <div class="today-day-label">DIA</div>
       <div class="today-day-num">${dn}</div>
@@ -1044,6 +1045,8 @@ function renderToday(){
     <div style="text-align:center;margin-bottom:18px">
       <span class="streak-badge">🔥 ${streak===0?'Nenhum dia seguido':streak===1?'1 dia seguido':streak+' dias seguidos'}</span>
     </div>`;
+
+  let leftCol='';
 
   let rightCol='';
 
@@ -1089,7 +1092,7 @@ function renderToday(){
     rightCol+=`</ul></div>`;
   }
 
-  el.innerHTML=`<div class="page-inner"><div class="today-grid"><div class="today-grid-left">${leftCol}</div><div class="today-grid-right">${rightCol}</div></div></div>`;
+  el.innerHTML=`<div class="page-inner"><div class="today-grid"><div class="today-grid-top">${topRow}</div><div class="today-grid-left">${leftCol}</div><div class="today-grid-right">${rightCol}</div></div></div>`;
 }
 
 // ═══════════════════════════════════════════
