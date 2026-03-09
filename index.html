@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#120f0a" id="theme-meta"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>Bíblia em 1 Ano</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    :root{
+      --bg:#120f0a;--bg2:#1e1810;--bg3:#2a2015;
+      --gold:#c8983a;--gold-light:#e8b84b;
+      --cream:#f0e0c0;--muted:#8a7355;--border:#3a2e1e;
+      --green:#3a7d5a;--green-bg:#1a3d2a;
+      --red:#8b3a3a;--red-light:#e87070;
+      --card-grad:linear-gradient(135deg,#1e1810 60%,#2a1f08);
+      --font-title:'Cinzel',Georgia,serif;
+      --font-body:'Crimson Text',Georgia,serif;
+      --nav-h:64px;--header-h:72px;
+    }
+    body.light{
+      --bg:#f5efe3;--bg2:#ede4d2;--bg3:#e2d5be;
+      --gold:#8b5e1a;--gold-light:#a07010;
+      --cream:#1e1408;--muted:#7a6040;--border:#c8b898;
+      --green:#2a6045;--green-bg:#d4edd8;
+      --red:#7a2a2a;--red-light:#c05050;
+      --card-grad:linear-gradient(135deg,#ede4d2 60%,#f0e4c8);
+    }
+
+    html,body{height:100%;background:var(--bg);color:var(--cream);font-family:var(--font-body);font-size:18px;line-height:1.5;overflow:hidden;transition:background .3s,color .3s}
+
+    /* LAYOUT */
+    #app{display:flex;flex-direction:column;height:100dvh}
+    header{flex-shrink:0;height:var(--header-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:10px;position:relative;transition:background .3s,border-color .3s}
+    .header-icon{font-size:24px}
+    .header-text{flex:1;min-width:0}
+    .header-text h1{font-family:var(--font-title);font-size:14px;font-weight:600;color:var(--gold-light);letter-spacing:.06em}
+    .header-text p{font-size:11px;color:var(--muted);font-family:var(--font-body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #global-progress{height:3px;background:var(--border);position:absolute;bottom:0;left:0;right:0}
+    #global-progress-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));transition:width .6s ease}
+    .hdr-btn{background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);width:34px;height:34px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:border-color .2s,color .2s;flex-shrink:0}
+    .hdr-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+    /* PAGES */
+    #pages{flex:1;overflow:hidden;position:relative}
+    .page{position:absolute;inset:0;overflow-y:auto;padding:16px 16px 24px;opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .25s,transform .25s;-webkit-overflow-scrolling:touch}
+    .page.active{opacity:1;pointer-events:all;transform:translateY(0)}
+
+    /* NAV */
+    nav{flex-shrink:0;height:var(--nav-h);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:stretch;transition:background .3s,border-color .3s}
+    .nav-btn{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);font-family:var(--font-title);font-size:9px;letter-spacing:.05em;transition:color .2s;position:relative}
+    .nav-btn .nav-icon{font-size:20px;transition:transform .2s}
+    .nav-btn.active{color:var(--gold-light)}
+    .nav-btn.active .nav-icon{transform:translateY(-2px)}
+    .nav-btn::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:var(--gold);border-radius:0 0 4px 4px;transform:scaleX(0);transition:transform .2s}
+    .nav-btn.active::before{transform:scaleX(1)}
+
+    /* CARDS */
+    .card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;transition:background .3s,border-color .3s}
+    .card-gold{border-color:var(--gold);background:var(--card-grad)}
+    .section-title{font-family:var(--font-title);font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+    /* TODAY */
+    .today-date-block{text-align:center;margin-bottom:18px}
+    .today-day-label{font-family:var(--font-title);font-size:11px;letter-spacing:.15em;color:var(--gold);text-transform:uppercase}
+    .today-day-num{font-family:var(--font-title);font-size:52px;font-weight:700;color:var(--cream);line-height:1;margin:4px 0}
+    .today-date-str{font-size:15px;color:var(--muted);font-style:italic}
+    .streak-badge{display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-family:var(--font-title);font-size:12px;color:var(--gold-light);letter-spacing:.06em;margin-bottom:18px;transition:background .3s}
+
+    /* READING ROWS */
+    .reading-row{list-style:none;display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;transition:opacity .15s}
+    .reading-row:last-child{border-bottom:none}
+    .reading-row:active{opacity:.7}
+    .reading-chk{flex-shrink:0;width:30px;height:30px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;color:transparent;transition:all .2s cubic-bezier(.34,1.56,.64,1)}
+    .reading-row.checked .reading-chk{background:var(--green);border-color:var(--green);color:#fff;transform:scale(1.1)}
+    .reading-text{flex:1;font-size:18px;color:var(--cream);font-family:var(--font-body);line-height:1.3;transition:color .2s}
+    .reading-row.checked .reading-text{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--green)}
+    .readings-progress{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .readings-progress-bar{flex:1;height:6px;background:var(--border);border-radius:10px;overflow:hidden}
+    .readings-progress-fill{height:100%;background:linear-gradient(90deg,var(--green),#6bcf9a);border-radius:10px;transition:width .4s ease}
+    .readings-progress-label{font-family:var(--font-title);font-size:11px;color:var(--muted);letter-spacing:.06em;white-space:nowrap}
+    .day-complete-banner{display:flex;align-items:center;gap:10px;background:var(--green-bg);border:1px solid var(--green);border-radius:10px;padding:12px 16px;margin-top:4px;animation:pop-in .35s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes pop-in{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+    .dcb-icon{font-size:22px}
+    .dcb-text{flex:1}
+    .dcb-text strong{display:block;font-family:var(--font-title);font-size:12px;letter-spacing:.08em;color:#6bcf9a}
+    .dcb-text p{font-size:14px;color:var(--muted);font-style:italic}
+    .undo-link{font-family:var(--font-title);font-size:10px;letter-spacing:.08em;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px;background:none;border:none;padding:0;transition:color .2s}
+    .undo-link:hover{color:var(--cream)}
+    .mini-list{list-style:none}
+    .mini-list li{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+    .mini-list li:last-child{border-bottom:none}
+    .mini-day{font-family:var(--font-title);font-size:11px;color:var(--gold);min-width:36px;padding-top:2px}
+    .mini-readings{font-size:16px;color:var(--muted);line-height:1.4}
+
+    /* PLAN PAGE */
+    .plan-filter-bar{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+    .plan-filter-bar::-webkit-scrollbar{display:none}
+    .filter-chip{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-family:var(--font-title);font-size:11px;letter-spacing:.08em;cursor:pointer;transition:all .2s}
+    .filter-chip.active{border-color:var(--gold);background:var(--bg3);color:var(--gold-light)}
+    .plan-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+    .plan-item:last-child{border-bottom:none}
+    .plan-check{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s;margin-top:3px;cursor:pointer}
+    .plan-check.done{background:var(--green);border-color:var(--green);color:#fff}
+    .plan-check.today-check{border-color:var(--gold)}
+    .plan-check.partial{border-color:var(--gold);color:var(--gold)}
+    .plan-info{flex:1;min-width:0;cursor:pointer}
+    .plan-day-label{font-family:var(--font-title);font-size:11px;color:var(--gold);letter-spacing:.08em}
+    .plan-day-date{font-size:13px;color:var(--muted);font-style:italic;margin-bottom:2px}
+    .plan-readings-text{font-size:17px;color:var(--cream);line-height:1.4}
+    .plan-item.past-undone .plan-readings-text{color:var(--red);opacity:.8}
+    .plan-item.future-item .plan-readings-text{color:var(--muted)}
+    .note-btn{background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted);padding:4px;transition:color .2s;flex-shrink:0}
+    .note-btn:hover,.note-btn.has-note{color:var(--gold)}
+
+    /* CALENDAR */
+    .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .cal-month-name{font-family:var(--font-title);font-size:15px;letter-spacing:.08em;color:var(--cream)}
+    .cal-nav{background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .cal-nav:hover{border-color:var(--gold);color:var(--gold)}
+    .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:8px}
+    .cal-wd{font-family:var(--font-title);font-size:10px;letter-spacing:.08em;color:var(--muted);padding:4px 0}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+    .cal-day{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;background:var(--bg2);border:1px solid transparent;font-size:14px;transition:all .15s}
+    .cal-day.empty{background:transparent;border-color:transparent;cursor:default}
+    .cal-day.no-reading{background:transparent;cursor:default;color:var(--muted)}
+    .cal-day.completed{background:var(--green-bg);border-color:var(--green);color:#6bcf9a}
+    .cal-day.completed::after{content:'✓';font-size:9px;position:absolute;bottom:2px;color:#6bcf9a}
+    .cal-day.has-note::before{content:'•';font-size:10px;position:absolute;top:1px;right:4px;color:var(--gold)}
+    .cal-day.today-day{border-color:var(--gold);color:var(--gold-light);font-weight:600}
+    .cal-day.today-day.completed{border-color:var(--green)}
+    .cal-day:hover:not(.empty):not(.no-reading){border-color:var(--muted)}
+    .cal-legend{display:flex;gap:16px;margin-top:16px;flex-wrap:wrap}
+    .legend-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+    .legend-dot{width:12px;height:12px;border-radius:3px;border:1px solid}
+
+    /* STATS */
+    .stat-big{text-align:center;margin-bottom:8px}
+    .stat-num{font-family:var(--font-title);font-size:48px;font-weight:700;color:var(--gold-light)}
+    .stat-label{font-size:14px;color:var(--muted)}
+    .stat-row{display:flex;gap:12px;margin-bottom:14px}
+    .stat-box{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;transition:background .3s}
+    .stat-box-num{font-family:var(--font-title);font-size:26px;color:var(--cream)}
+    .stat-box-label{font-size:12px;color:var(--muted);margin-top:2px}
+    .progress-bar-wrap{background:var(--border);border-radius:10px;height:10px;overflow:hidden;margin:10px 0 5px}
+    .progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));border-radius:10px;transition:width .6s ease}
+    .progress-bar-label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+    .testament-bar{margin-bottom:14px}
+    .testament-label{font-family:var(--font-title);font-size:12px;color:var(--cream);letter-spacing:.06em;margin-bottom:4px}
+
+    /* ACHIEVEMENTS */
+    .ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .ach-item{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;transition:all .3s}
+    .ach-item.unlocked{border-color:var(--gold);background:var(--card-grad)}
+    .ach-icon{font-size:26px;flex-shrink:0;filter:grayscale(1);opacity:.35;transition:all .3s}
+    .ach-item.unlocked .ach-icon{filter:none;opacity:1}
+    .ach-name{font-family:var(--font-title);font-size:11px;color:var(--muted);letter-spacing:.05em;line-height:1.3;transition:color .3s}
+    .ach-item.unlocked .ach-name{color:var(--gold-light)}
+    .ach-desc{font-size:12px;color:var(--muted);font-style:italic;margin-top:2px}
+
+    /* CATCHUP */
+    .catchup-card{background:var(--bg2);border:1px solid var(--red);border-radius:14px;padding:18px;margin-bottom:14px}
+    .catchup-title{font-family:var(--font-title);font-size:12px;color:var(--red-light);letter-spacing:.08em;margin-bottom:8px}
+    .catchup-chip{width:100%;margin-top:12px;padding:12px;border-radius:10px;border:1px solid var(--red);background:transparent;color:var(--red-light);font-family:var(--font-title);font-size:12px;letter-spacing:.06em;cursor:pointer;transition:all .2s}
+    .catchup-chip:hover{background:rgba(139,58,58,.2)}
+
+    /* SHARE */
+    .share-btn{width:100%;padding:14px;border-radius:12px;border:1px solid var(--gold);background:transparent;color:var(--gold-light);font-family:var(--font-title);font-size:13px;letter-spacing:.1em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
+    .share-btn:hover{background:var(--gold);color:var(--bg)}
+    #share-canvas{display:none}
+
+    /* MODALS */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:flex-end;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .25s}
+    .modal-overlay.open{opacity:1;pointer-events:all}
+    .modal-sheet{background:var(--bg2);border-radius:20px 20px 0 0;border:1px solid var(--border);border-bottom:none;padding:24px 20px 40px;width:100%;max-width:480px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,1,.22,1),background .3s,border-color .3s;max-height:90dvh;overflow-y:auto}
+    .modal-overlay.open .modal-sheet{transform:translateY(0)}
+    .modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px}
+    .modal-title{font-family:var(--font-title);font-size:16px;color:var(--gold-light);letter-spacing:.08em;margin-bottom:20px;text-align:center}
+    .form-group{margin-bottom:18px}
+    .form-label{display:block;font-family:var(--font-title);font-size:11px;letter-spacing:.1em;color:var(--muted);margin-bottom:8px;text-transform:uppercase}
+    .form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--cream);font-family:var(--font-body);font-size:17px;outline:none;transition:border-color .2s,background .3s;-webkit-appearance:none}
+    .form-input:focus{border-color:var(--gold)}
+    .form-input::placeholder{color:var(--muted)}
+    textarea.form-input{resize:vertical;min-height:110px;line-height:1.5}
+    .form-hint{font-size:13px;color:var(--muted);font-style:italic;margin-top:6px}
+    .plan-radio-group{display:flex;flex-direction:column;gap:10px}
+    .plan-radio{display:flex;align-items:flex-start;gap:12px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s}
+    .plan-radio.sel{border-color:var(--gold);background:var(--card-grad)}
+    .plan-radio-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:2px;transition:all .2s;display:flex;align-items:center;justify-content:center}
+    .plan-radio.sel .plan-radio-dot{border-color:var(--gold);background:var(--gold)}
+    .plan-radio.sel .plan-radio-dot::after{content:'';width:6px;height:6px;border-radius:50%;background:var(--bg)}
+    .plan-radio-info strong{display:block;font-family:var(--font-title);font-size:12px;color:var(--cream);letter-spacing:.06em;margin-bottom:2px}
+    .plan-radio-info span{font-size:13px;color:var(--muted);font-style:italic}
+    .btn-primary{width:100%;padding:15px;border-radius:12px;border:none;background:var(--gold);color:var(--bg);font-family:var(--font-title);font-size:13px;letter-spacing:.1em;cursor:pointer;margin-top:8px;transition:background .2s}
+    .btn-primary:hover{background:var(--gold-light)}
+    .btn-secondary{width:100%;padding:14px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font-title);font-size:12px;letter-spacing:.08em;cursor:pointer;margin-top:10px;transition:all .2s}
+    .btn-secondary:hover{border-color:var(--gold);color:var(--gold)}
+    .btn-danger{width:100%;padding:14px;border-radius:12px;border:1px solid var(--red);background:transparent;color:var(--red-light);font-family:var(--font-title);font-size:12px;letter-spacing:.08em;cursor:pointer;margin-top:10px;transition:all .2s}
+    .btn-danger:hover{background:rgba(139,58,58,.2)}
+    .divider{height:1px;background:var(--border);margin:20px 0}
+
+    /* TOAST */
+    #toast{position:fixed;bottom:calc(var(--nav-h)+16px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-family:var(--font-title);font-size:12px;letter-spacing:.06em;color:var(--cream);opacity:0;transition:all .3s;z-index:200;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    /* AUTH */
+    #auth-btn{position:relative}
+    .auth-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;display:block}
+    .auth-dot{position:absolute;bottom:-2px;right:-2px;width:9px;height:9px;border-radius:50%;background:var(--green);border:2px solid var(--bg2);display:none}
+    #auth-btn.logged-in .auth-dot{display:block}
+
+    .login-btn{width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--bg3);color:var(--cream);font-family:var(--font-title);font-size:13px;letter-spacing:.08em;cursor:pointer;display:flex;align-items:center;gap:14px;margin-bottom:12px;transition:all .2s}
+    .login-btn:hover{border-color:var(--gold);background:var(--bg2)}
+    .login-btn-icon{font-size:22px;flex-shrink:0}
+    .login-btn-text{flex:1;text-align:left}
+    .login-btn-text strong{display:block;font-size:13px;color:var(--cream)}
+    .login-btn-text span{font-size:12px;color:var(--muted);font-style:italic;font-family:var(--font-body)}
+
+    .profile-block{display:flex;align-items:center;gap:14px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px}
+    .profile-photo{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0}
+    .profile-photo-placeholder{width:52px;height:52px;border-radius:50%;background:var(--bg2);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+    .profile-info{flex:1;min-width:0}
+    .profile-name{font-family:var(--font-title);font-size:14px;color:var(--cream);letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .profile-email{font-size:13px;color:var(--muted);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .sync-status{display:flex;align-items:center;gap:6px;font-family:var(--font-title);font-size:11px;letter-spacing:.06em;margin-top:20px;padding:12px;background:var(--bg3);border-radius:10px;border:1px solid var(--border)}
+    .sync-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .sync-dot.synced{background:var(--green)}
+    .sync-dot.syncing{background:var(--gold);animation:pulse .8s infinite alternate}
+    .sync-dot.offline{background:var(--muted)}
+    .sync-dot.error{background:var(--red-light)}
+    @keyframes pulse{from{opacity:.4}to{opacity:1}}
+
+    .firebase-setup{background:var(--bg3);border:1px solid var(--gold);border-radius:12px;padding:16px;margin-bottom:20px}
+    .firebase-setup-title{font-family:var(--font-title);font-size:12px;color:var(--gold-light);letter-spacing:.08em;margin-bottom:10px}
+    .firebase-setup ol{padding-left:18px;color:var(--muted);font-size:14px;line-height:2}
+    .firebase-setup a{color:var(--gold-light);text-decoration:underline}
+    .firebase-setup code{font-size:12px;background:var(--bg2);padding:2px 6px;border-radius:4px;color:var(--gold-light)}
+  </style>
+
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+    .empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+    .empty-state .empty-icon{font-size:40px;margin-bottom:12px}
+    .empty-state p{font-size:16px;font-style:italic}
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <span class="header-icon">📖</span>
+    <div class="header-text">
+      <h1>BÍBLIA EM 1 ANO</h1>
+      <p id="header-sub">Carregando plano...</p>
+    </div>
+    <button class="hdr-btn" id="theme-btn" onclick="toggleTheme()" title="Tema">🌙</button>
+    <button class="hdr-btn" id="auth-btn" onclick="openAuthModal()" title="Conta">
+      <span id="auth-btn-inner">👤</span>
+      <span class="auth-dot"></span>
+    </button>
+    <button class="hdr-btn" onclick="openSettings()" title="Configurações">⚙</button>
+    <div id="global-progress"><div id="global-progress-bar" style="width:0%"></div></div>
+  </header>
+
+  <div id="pages">
+    <!-- HOJE -->
+    <div class="page active" id="page-hoje"><div id="today-content"></div></div>
+
+    <!-- PLANO -->
+    <div class="page" id="page-plano">
+      <div class="plan-filter-bar">
+        <button class="filter-chip active" onclick="setPlanFilter(this,'all')">TODOS</button>
+        <button class="filter-chip" onclick="setPlanFilter(this,'upcoming')">PRÓXIMOS</button>
+        <button class="filter-chip" onclick="setPlanFilter(this,'done')">CONCLUÍDOS</button>
+        <button class="filter-chip" onclick="setPlanFilter(this,'missed')">PENDENTES</button>
+      </div>
+      <div id="plan-list"></div>
+    </div>
+
+    <!-- CALENDÁRIO -->
+    <div class="page" id="page-calendario">
+      <div class="card">
+        <div class="cal-header">
+          <button class="cal-nav" onclick="calNav(-1)">‹</button>
+          <span class="cal-month-name" id="cal-month-label"></span>
+          <button class="cal-nav" onclick="calNav(1)">›</button>
+        </div>
+        <div class="cal-weekdays">
+          <div class="cal-wd">DOM</div><div class="cal-wd">SEG</div><div class="cal-wd">TER</div>
+          <div class="cal-wd">QUA</div><div class="cal-wd">QUI</div><div class="cal-wd">SEX</div><div class="cal-wd">SÁB</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green-bg);border-color:var(--green)"></div>Concluído</div>
+          <div class="legend-item"><div class="legend-dot" style="border-color:var(--gold)"></div>Hoje</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--bg2);border-color:var(--border)"></div>Pendente</div>
+        </div>
+      </div>
+      <div id="cal-detail"></div>
+    </div>
+
+    <!-- PROGRESSO -->
+    <div class="page" id="page-stats"><div id="stats-content"></div></div>
+  </div>
+
+  <nav>
+    <button class="nav-btn active" id="nav-hoje" onclick="switchTab('hoje')"><span class="nav-icon">☀</span>HOJE</button>
+    <button class="nav-btn" id="nav-plano" onclick="switchTab('plano')"><span class="nav-icon">📋</span>PLANO</button>
+    <button class="nav-btn" id="nav-calendario" onclick="switchTab('calendario')"><span class="nav-icon">📅</span>CALENDÁRIO</button>
+    <button class="nav-btn" id="nav-stats" onclick="switchTab('stats')"><span class="nav-icon">🏆</span>PROGRESSO</button>
+  </nav>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙ CONFIGURAÇÕES</div>
+    <div class="form-group">
+      <label class="form-label">Data de Início do Plano</label>
+      <input type="date" id="cfg-start-date" class="form-input"/>
+      <p class="form-hint">O Dia 1 corresponde a esta data.</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Plano de Leitura</label>
+      <div class="plan-radio-group" id="plan-radio-group">
+        <div class="plan-radio sel" data-plan="canonical" onclick="selectPlan(this)">
+          <div class="plan-radio-dot"></div>
+          <div class="plan-radio-info"><strong>Sequencial</strong><span>Gênesis ao Apocalipse, ordem canônica</span></div>
+        </div>
+        <div class="plan-radio" data-plan="interleaved" onclick="selectPlan(this)">
+          <div class="plan-radio-dot"></div>
+          <div class="plan-radio-info"><strong>AT + NT Intercalado</strong><span>Antigo e Novo Testamento juntos a cada dia</span></div>
+        </div>
+        <div class="plan-radio" data-plan="nt-first" onclick="selectPlan(this)">
+          <div class="plan-radio-dot"></div>
+          <div class="plan-radio-info"><strong>Novo Testamento Primeiro</strong><span>NT completo, depois o Antigo Testamento</span></div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveSettings()">✓ SALVAR CONFIGURAÇÕES</button>
+    <button class="btn-secondary" onclick="closeModal('modal-settings')">CANCELAR</button>
+    <div class="divider"></div>
+    <button class="btn-danger" onclick="resetProgress()">🗑 APAGAR PROGRESSO</button>
+  </div>
+</div>
+
+<!-- NOTE MODAL -->
+<div class="modal-overlay" id="modal-note">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="note-modal-title">✏ ANOTAÇÃO</div>
+    <div class="form-group">
+      <label class="form-label">Reflexão do Dia</label>
+      <textarea id="note-textarea" class="form-input" placeholder="Escreva suas reflexões, versículos marcantes, orações..."></textarea>
+    </div>
+    <button class="btn-primary" onclick="saveNote()">✓ SALVAR</button>
+    <button class="btn-secondary" onclick="closeModal('modal-note')">CANCELAR</button>
+    <button class="btn-danger" id="delete-note-btn" onclick="deleteNote()" style="display:none">🗑 APAGAR ANOTAÇÃO</button>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="modal-auth">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div id="auth-modal-content"></div>
+  </div>
+</div>
+
+<!-- SETUP MODAL -->
+<div class="modal-overlay" id="modal-setup">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📖 BEM-VINDO!</div>
+    <p style="text-align:center;color:var(--muted);font-style:italic;margin-bottom:24px;font-size:16px">Configure seu plano de leitura da Bíblia em 1 Ano.</p>
+    <div class="form-group">
+      <label class="form-label">Data de Início</label>
+      <input type="date" id="setup-start-date" class="form-input"/>
+      <p class="form-hint">Geralmente 1º de Janeiro do ano atual.</p>
+    </div>
+    <button class="btn-primary" onclick="finishSetup()">COMEÇAR A JORNADA →</button>
+  </div>
+</div>
+
+<canvas id="share-canvas"></canvas>
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  ★ FIREBASE CONFIG — preencha com seus dados
+//  Crie um projeto em console.firebase.google.com
+//  e substitua os valores abaixo.
+// ═══════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            "SUA_API_KEY",
+  authDomain:        "SEU_PROJETO.firebaseapp.com",
+  projectId:         "SEU_PROJETO",
+  storageBucket:     "SEU_PROJETO.appspot.com",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId:             "SEU_APP_ID",
+};
+
+// ═══════════════════════════════════════════
+//  FIREBASE INIT
+// ═══════════════════════════════════════════
+let fbApp=null, fbAuth=null, fbDb=null, fbUser=null;
+let _syncTimer=null, _syncStatus='offline'; // 'offline'|'syncing'|'synced'|'error'
+
+function isFirebaseConfigured(){
+  return FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== 'SUA_API_KEY';
+}
+
+function initFirebase(){
+  if(!isFirebaseConfigured()) return;
+  try{
+    fbApp  = firebase.initializeApp(FIREBASE_CONFIG);
+    fbAuth = firebase.auth();
+    fbDb   = firebase.firestore();
+
+    fbAuth.onAuthStateChanged(user => {
+      fbUser = user;
+      updateAuthUI();
+      if(user){
+        loadFromCloud();
+      }
+    });
+  } catch(e){
+    console.warn('Firebase init error:', e);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  AUTH ACTIONS
+// ═══════════════════════════════════════════
+async function signInWithGoogle(){
+  if(!fbAuth) return;
+  try{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await fbAuth.signInWithPopup(provider);
+    closeModal('modal-auth');
+    showToast('✓ Conectado com Google!');
+  } catch(e){
+    if(e.code !== 'auth/popup-closed-by-user')
+      showToast('⚠ Erro ao entrar: ' + e.message);
+  }
+}
+
+async function signInWithFacebook(){
+  if(!fbAuth) return;
+  try{
+    const provider = new firebase.auth.FacebookAuthProvider();
+    await fbAuth.signInWithPopup(provider);
+    closeModal('modal-auth');
+    showToast('✓ Conectado com Facebook!');
+  } catch(e){
+    if(e.code !== 'auth/popup-closed-by-user')
+      showToast('⚠ Erro ao entrar: ' + e.message);
+  }
+}
+
+async function signOutUser(){
+  if(!fbAuth) return;
+  await fbAuth.signOut();
+  fbUser = null;
+  updateAuthUI();
+  closeModal('modal-auth');
+  showToast('Saiu da conta. Progresso salvo localmente.');
+}
+
+// ═══════════════════════════════════════════
+//  CLOUD SYNC
+// ═══════════════════════════════════════════
+function serializeForCloud(){
+  const partial={};
+  for(const [k,v] of Object.entries(STATE.partialReadings)) if(v.size>0) partial[k]=[...v];
+  return {
+    startDate:    STATE.startDate||'',
+    planType:     STATE.planType||'canonical',
+    theme:        STATE.theme||'dark',
+    completed:    [...STATE.completed],
+    partialReadings: partial,
+    notes:        STATE.notes||{},
+    unlockedAch:  [...STATE.unlockedAch],
+    lastUpdated:  firebase.firestore.FieldValue.serverTimestamp(),
+  };
+}
+
+function deserializeFromCloud(data){
+  STATE.startDate   = data.startDate || null;
+  STATE.planType    = data.planType || 'canonical';
+  STATE.theme       = data.theme || 'dark';
+  STATE.completed   = new Set(data.completed || []);
+  STATE.unlockedAch = new Set(data.unlockedAch || []);
+  STATE.notes       = data.notes || {};
+  const partial = data.partialReadings || {};
+  STATE.partialReadings = {};
+  for(const [k,arr] of Object.entries(partial)) STATE.partialReadings[k]=new Set(arr);
+}
+
+async function syncToCloud(){
+  if(!fbUser || !fbDb) return;
+  _syncStatus='syncing'; updateSyncDot();
+  try{
+    await fbDb.collection('users').doc(fbUser.uid).set(serializeForCloud(), {merge:true});
+    _syncStatus='synced'; updateSyncDot();
+  } catch(e){
+    _syncStatus='error'; updateSyncDot();
+    console.warn('Sync error:', e);
+  }
+}
+
+function debouncedSync(){
+  clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(syncToCloud, 1200);
+}
+
+async function loadFromCloud(){
+  if(!fbUser || !fbDb) return;
+  _syncStatus='syncing'; updateSyncDot();
+  try{
+    const doc = await fbDb.collection('users').doc(fbUser.uid).get();
+    if(doc.exists){
+      const cloudData = doc.data();
+      // Merge strategy: union completed days, cloud wins for settings
+      const localCompleted = new Set(STATE.completed);
+      deserializeFromCloud(cloudData);
+      // Union: keep locally completed days too
+      for(const d of localCompleted) STATE.completed.add(d);
+      saveState(); // persist merged result locally
+      await loadPlan();
+      applyTheme();
+      renderAll();
+      showToast('☁ Progresso sincronizado!');
+    } else {
+      // No cloud data yet — push local to cloud
+      await syncToCloud();
+    }
+    _syncStatus='synced'; updateSyncDot();
+  } catch(e){
+    _syncStatus='error'; updateSyncDot();
+    console.warn('Load from cloud error:', e);
+  }
+}
+
+function updateSyncDot(){
+  const dot = document.querySelector('.sync-dot');
+  const label = document.getElementById('sync-label');
+  if(!dot) return;
+  dot.className = 'sync-dot ' + _syncStatus;
+  const labels = {synced:'Sincronizado',syncing:'Sincronizando…',offline:'Offline',error:'Erro de sincronização'};
+  if(label) label.textContent = labels[_syncStatus]||'';
+}
+
+// ═══════════════════════════════════════════
+//  AUTH UI
+// ═══════════════════════════════════════════
+function updateAuthUI(){
+  const btn = document.getElementById('auth-btn');
+  const inner = document.getElementById('auth-btn-inner');
+  if(!btn) return;
+  if(fbUser){
+    btn.classList.add('logged-in');
+    if(fbUser.photoURL){
+      inner.innerHTML=`<img class="auth-avatar" src="${fbUser.photoURL}" alt=""/>`;
+    } else {
+      inner.textContent='👤';
+    }
+  } else {
+    btn.classList.remove('logged-in');
+    inner.textContent='👤';
+  }
+}
+
+function openAuthModal(){
+  const el = document.getElementById('auth-modal-content');
+  if(!isFirebaseConfigured()){
+    el.innerHTML=`
+      <div class="modal-title">☁ SINCRONIZAÇÃO</div>
+      <div class="firebase-setup">
+        <div class="firebase-setup-title">⚙ CONFIGURAÇÃO NECESSÁRIA</div>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:12px;font-style:italic">Para ativar o login e a sincronização entre dispositivos, você precisa configurar um projeto Firebase gratuito:</p>
+        <ol>
+          <li>Acesse <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a></li>
+          <li>Crie um projeto (ex: <code>biblia-1-ano</code>)</li>
+          <li>Vá em <strong>Authentication → Sign-in method</strong> e ative <strong>Google</strong> e/ou <strong>Facebook</strong></li>
+          <li>Vá em <strong>Firestore Database</strong> → Criar banco de dados → Modo de produção</li>
+          <li>Vá em <strong>Configurações do projeto → Seus apps → Web</strong>, copie o objeto <code>firebaseConfig</code></li>
+          <li>Abra o arquivo <code>biblia-1-ano.html</code>, localize a seção <code>FIREBASE_CONFIG</code> e substitua os valores</li>
+          <li>Em <strong>Authentication → Settings → Domínios autorizados</strong>, adicione seu domínio GitHub Pages</li>
+        </ol>
+      </div>
+      <button class="btn-secondary" onclick="closeModal('modal-auth')">FECHAR</button>`;
+    openModal('modal-auth'); return;
+  }
+
+  if(fbUser){
+    const photo = fbUser.photoURL
+      ? `<img class="profile-photo" src="${fbUser.photoURL}" alt=""/>`
+      : `<div class="profile-photo-placeholder">👤</div>`;
+    el.innerHTML=`
+      <div class="modal-title">☁ MINHA CONTA</div>
+      <div class="profile-block">
+        ${photo}
+        <div class="profile-info">
+          <div class="profile-name">${fbUser.displayName||'Usuário'}</div>
+          <div class="profile-email">${fbUser.email||''}</div>
+        </div>
+      </div>
+      <div class="sync-status">
+        <div class="sync-dot ${_syncStatus}"></div>
+        <span id="sync-label" style="color:var(--muted);font-size:11px">${{synced:'Sincronizado',syncing:'Sincronizando…',offline:'Offline',error:'Erro de sincronização'}[_syncStatus]}</span>
+        <button onclick="loadFromCloud();updateSyncDot();" style="margin-left:auto;background:none;border:none;color:var(--gold);font-family:var(--font-title);font-size:11px;cursor:pointer;letter-spacing:.06em">↻ FORÇAR SYNC</button>
+      </div>
+      <button class="btn-secondary" onclick="closeModal('modal-auth')" style="margin-top:20px">FECHAR</button>
+      <button class="btn-danger" onclick="signOutUser()">SAIR DA CONTA</button>`;
+  } else {
+    el.innerHTML=`
+      <div class="modal-title">☁ ENTRAR NA CONTA</div>
+      <p style="text-align:center;color:var(--muted);font-style:italic;font-size:15px;margin-bottom:24px">Faça login para sincronizar seu progresso entre dispositivos automaticamente.</p>
+      <button class="login-btn" onclick="signInWithGoogle()">
+        <span class="login-btn-icon">🔵</span>
+        <div class="login-btn-text"><strong>ENTRAR COM GOOGLE</strong><span>Rápido e seguro</span></div>
+      </button>
+      <button class="login-btn" onclick="signInWithFacebook()">
+        <span class="login-btn-icon">🔷</span>
+        <div class="login-btn-text"><strong>ENTRAR COM FACEBOOK</strong><span>Use sua conta do Facebook</span></div>
+      </button>
+      <p style="font-size:13px;color:var(--muted);font-style:italic;text-align:center;margin-top:8px">O app funciona normalmente sem login.<br>O progresso fica salvo neste dispositivo.</p>
+      <button class="btn-secondary" onclick="closeModal('modal-auth')">CONTINUAR SEM LOGIN</button>`;
+  }
+  openModal('modal-auth');
+}
+
+const BOOKS=[
+  {n:"Gênesis",ch:50},{n:"Êxodo",ch:40},{n:"Levítico",ch:27},{n:"Números",ch:36},
+  {n:"Deuteronômio",ch:34},{n:"Josué",ch:24},{n:"Juízes",ch:21},{n:"Rute",ch:4},
+  {n:"1 Samuel",ch:31},{n:"2 Samuel",ch:24},{n:"1 Reis",ch:22},{n:"2 Reis",ch:25},
+  {n:"1 Crônicas",ch:29},{n:"2 Crônicas",ch:36},{n:"Esdras",ch:10},{n:"Neemias",ch:13},
+  {n:"Ester",ch:10},{n:"Jó",ch:42},{n:"Salmos",ch:150},{n:"Provérbios",ch:31},
+  {n:"Eclesiastes",ch:12},{n:"Cantares",ch:8},{n:"Isaías",ch:66},{n:"Jeremias",ch:52},
+  {n:"Lamentações",ch:5},{n:"Ezequiel",ch:48},{n:"Daniel",ch:12},{n:"Oséias",ch:14},
+  {n:"Joel",ch:3},{n:"Amós",ch:9},{n:"Obadias",ch:1},{n:"Jonas",ch:4},
+  {n:"Miquéias",ch:7},{n:"Naum",ch:3},{n:"Habacuque",ch:3},{n:"Sofonias",ch:3},
+  {n:"Ageu",ch:2},{n:"Zacarias",ch:14},{n:"Malaquias",ch:4},
+  {n:"Mateus",ch:28},{n:"Marcos",ch:16},{n:"Lucas",ch:24},{n:"João",ch:21},
+  {n:"Atos",ch:28},{n:"Romanos",ch:16},{n:"1 Coríntios",ch:16},{n:"2 Coríntios",ch:13},
+  {n:"Gálatas",ch:6},{n:"Efésios",ch:6},{n:"Filipenses",ch:4},{n:"Colossenses",ch:4},
+  {n:"1 Tessalonicenses",ch:5},{n:"2 Tessalonicenses",ch:3},{n:"1 Timóteo",ch:6},
+  {n:"2 Timóteo",ch:4},{n:"Tito",ch:3},{n:"Filemom",ch:1},{n:"Hebreus",ch:13},
+  {n:"Tiago",ch:5},{n:"1 Pedro",ch:5},{n:"2 Pedro",ch:3},{n:"1 João",ch:5},
+  {n:"2 João",ch:1},{n:"3 João",ch:1},{n:"Judas",ch:1},{n:"Apocalipse",ch:22},
+];
+const AT=BOOKS.slice(0,39), NT=BOOKS.slice(39);
+
+// ═══════════════════════════════════════════
+//  PLAN BUILDERS
+// ═══════════════════════════════════════════
+function flatten(books){const a=[];for(const b of books)for(let c=1;c<=b.ch;c++)a.push({book:b.n,chapter:c});return a;}
+function buildFromFlat(flat){
+  const plan=[];let idx=0;
+  for(let d=0;d<365;d++){
+    const target=Math.round((d+1)*flat.length/365);
+    const readings=[];
+    while(idx<target&&idx<flat.length){const c=flat[idx++];readings.push(`${c.book} ${c.chapter}`);}
+    plan.push({day:d+1,readings:readings.length?readings:['—']});
+  }
+  return plan;
+}
+function groupChaps(chaps){
+  if(!chaps.length)return['—'];
+  const r=[];let gs=chaps[0],ge=chaps[0];
+  for(let i=1;i<chaps.length;i++){const c=chaps[i];if(c.book===ge.book&&c.chapter===ge.chapter+1){ge=c;}else{r.push(fmt(gs,ge));gs=ge=c;}}
+  r.push(fmt(gs,ge));return r;
+}
+function fmt(s,e){
+  if(s.book===e.book)return s.chapter===e.chapter?`${s.book} ${s.chapter}`:`${s.book} ${s.chapter}–${e.chapter}`;
+  return`${s.book} ${s.chapter} · ${e.book} ${e.chapter}`;
+}
+
+// Groups individual "Book N" strings back into ranges for compact display
+function groupForDisplay(readings){
+  if(!readings||!readings.length)return'—';
+  const parsed=readings.map(r=>{const m=r.match(/^(.+)\s(\d+)$/);return m?{book:m[1],chapter:+m[2]}:null;}).filter(Boolean);
+  if(!parsed.length)return readings.join(' · ');
+  const result=[];let gs=parsed[0],ge=parsed[0];
+  for(let i=1;i<parsed.length;i++){
+    const c=parsed[i];
+    if(c.book===ge.book&&c.chapter===ge.chapter+1){ge=c;}
+    else{result.push(fmt(gs,ge));gs=ge=c;}
+  }
+  result.push(fmt(gs,ge));
+  return result.join(' · ');
+}
+function buildCanonical(){return buildFromFlat(flatten(BOOKS));}
+function buildNtFirst(){return buildFromFlat([...flatten(NT),...flatten(AT)]);}
+function buildInterleaved(){
+  const af=flatten(AT),nf=flatten(NT);
+  const plan=[];let ai=0,ni=0;
+  for(let d=0;d<365;d++){
+    const at=Math.round((d+1)*af.length/365),nt=Math.round((d+1)*nf.length/365);
+    const ch=[];
+    while(ai<at&&ai<af.length)ch.push(af[ai++]);
+    while(ni<nt&&ni<nf.length)ch.push(nf[ni++]);
+    plan.push({day:d+1,readings:groupChaps(ch)});
+  }
+  return plan;
+}
+
+// ═══════════════════════════════════════════
+//  ACHIEVEMENTS
+// ═══════════════════════════════════════════
+const ACHIEVEMENTS=[
+  {id:'first', icon:'🌱', name:'Primeiro Passo',    desc:'Concluir o Dia 1',             check:s=>s.completed.size>=1},
+  {id:'week',  icon:'🔥', name:'Uma Semana',         desc:'7 dias consecutivos',           check:()=>calcStreak()>=7},
+  {id:'month', icon:'💪', name:'Um Mês',             desc:'30 dias consecutivos',          check:()=>calcStreak()>=30},
+  {id:'d100',  icon:'💯', name:'Cem Dias',           desc:'100 dias concluídos',           check:s=>s.completed.size>=100},
+  {id:'half',  icon:'⚡', name:'Meio Caminho',       desc:'50% do plano concluído',        check:s=>s.completed.size>=183},
+  {id:'nt',    icon:'✝',  name:'Novo Testamento',   desc:'Todos os dias do NT',            check:s=>[...s.completed].filter(d=>d>OT_DAYS).length>=(365-OT_DAYS)},
+  {id:'ot',    icon:'📜', name:'Antigo Testamento', desc:'Todos os dias do AT',            check:s=>[...s.completed].filter(d=>d<=OT_DAYS).length>=OT_DAYS},
+  {id:'notes', icon:'✍',  name:'Escriba',           desc:'10 anotações registradas',      check:s=>Object.keys(s.notes).length>=10},
+  {id:'done',  icon:'🌟', name:'Jornada Completa',  desc:'Todos os 365 dias concluídos',   check:s=>s.completed.size>=365},
+];
+const OT_DAYS=Math.round(929/1189*365); // ~285
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let STATE={
+  startDate:null,planType:'canonical',plan:[],
+  completed:new Set(),partialReadings:{},notes:{},unlockedAch:new Set(),
+  calMonth:null,theme:'dark',
+};
+
+function saveState(){
+  localStorage.setItem('b1a_sd',STATE.startDate||'');
+  localStorage.setItem('b1a_pt',STATE.planType||'canonical');
+  localStorage.setItem('b1a_th',STATE.theme||'dark');
+  localStorage.setItem('b1a_done',JSON.stringify([...STATE.completed]));
+  localStorage.setItem('b1a_ach',JSON.stringify([...STATE.unlockedAch]));
+  localStorage.setItem('b1a_notes',JSON.stringify(STATE.notes||{}));
+  const p={};for(const[k,v]of Object.entries(STATE.partialReadings))if(v.size>0)p[k]=[...v];
+  localStorage.setItem('b1a_partial',JSON.stringify(p));
+  // Cloud sync (debounced, only when logged in)
+  if(fbUser) debouncedSync();
+}
+
+function loadState(){
+  STATE.startDate=localStorage.getItem('b1a_sd')||null;
+  STATE.planType=localStorage.getItem('b1a_pt')||'canonical';
+  STATE.theme=localStorage.getItem('b1a_th')||'dark';
+  try{STATE.completed=new Set(JSON.parse(localStorage.getItem('b1a_done')||'[]'));}catch{STATE.completed=new Set();}
+  try{STATE.unlockedAch=new Set(JSON.parse(localStorage.getItem('b1a_ach')||'[]'));}catch{STATE.unlockedAch=new Set();}
+  try{STATE.notes=JSON.parse(localStorage.getItem('b1a_notes')||'{}');}catch{STATE.notes={};}
+  try{
+    const raw=JSON.parse(localStorage.getItem('b1a_partial')||'{}');
+    STATE.partialReadings={};
+    for(const[k,arr]of Object.entries(raw))STATE.partialReadings[k]=new Set(arr);
+  }catch{STATE.partialReadings={};}
+}
+
+// ═══════════════════════════════════════════
+//  PLAN LOADING
+// ═══════════════════════════════════════════
+async function loadPlan(){
+  if(STATE.planType==='interleaved'){STATE.plan=buildInterleaved();return;}
+  if(STATE.planType==='nt-first'){STATE.plan=buildNtFirst();return;}
+  STATE.plan=buildCanonical();
+}
+
+// ═══════════════════════════════════════════
+//  DATE HELPERS
+// ═══════════════════════════════════════════
+function todayISO(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function isoToDate(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+function dateToISO(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function getTodayDayNum(){
+  if(!STATE.startDate)return null;
+  return Math.floor((isoToDate(todayISO())-isoToDate(STATE.startDate))/86400000)+1;
+}
+function dayNumToDate(n){
+  if(!STATE.startDate)return null;
+  const d=isoToDate(STATE.startDate);d.setDate(d.getDate()+n-1);return d;
+}
+function fmtDateBR(d){
+  const M=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const W=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+  return`${W[d.getDay()]}, ${d.getDate()} de ${M[d.getMonth()]}`;
+}
+function fmtMonthBR(y,m){
+  return['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][m]+' '+y;
+}
+
+// ═══════════════════════════════════════════
+//  STREAK
+// ═══════════════════════════════════════════
+function calcStreak(){
+  const dn=getTodayDayNum();if(!dn)return 0;
+  let s=0;for(let d=dn;d>=1;d--){if(STATE.completed.has(d))s++;else break;}return s;
+}
+
+// ═══════════════════════════════════════════
+//  ACHIEVEMENTS
+// ═══════════════════════════════════════════
+function checkAchievements(){
+  const newOnes=[];
+  for(const a of ACHIEVEMENTS){
+    if(!STATE.unlockedAch.has(a.id)&&a.check(STATE)){STATE.unlockedAch.add(a.id);newOnes.push(a);}
+  }
+  if(newOnes.length){saveState();for(const a of newOnes)setTimeout(()=>showToast(`${a.icon} Conquista: ${a.name}!`),600);}
+}
+
+// ═══════════════════════════════════════════
+//  MARK COMPLETE
+// ═══════════════════════════════════════════
+function toggleReading(dn,idx,total){
+  if(STATE.completed.has(dn))return;
+  if(!STATE.partialReadings[dn])STATE.partialReadings[dn]=new Set();
+  const set=STATE.partialReadings[dn];
+  if(set.has(idx))set.delete(idx);else set.add(idx);
+  if(set.size>=total){STATE.completed.add(dn);showToast('🎉 Dia '+dn+' concluído!');checkAchievements();}
+  saveState();renderToday();updateHeaderStats();renderPlan();renderCalendar();renderStats();
+}
+function undoDay(dn){
+  STATE.completed.delete(dn);STATE.partialReadings[dn]=new Set();
+  saveState();showToast('↩ Dia '+dn+' reaberto');renderAll();
+}
+function toggleDay(dn){
+  if(STATE.completed.has(dn)){undoDay(dn);return;}
+  STATE.completed.add(dn);
+  const p=STATE.plan[dn-1];if(p)STATE.partialReadings[dn]=new Set(p.readings.map((_,i)=>i));
+  showToast('✓ Dia '+dn+' concluído!');checkAchievements();saveState();renderAll();
+}
+
+// ═══════════════════════════════════════════
+//  NOTES
+// ═══════════════════════════════════════════
+let _noteDay=null;
+function openNote(dn){
+  _noteDay=dn;
+  document.getElementById('note-modal-title').textContent=`✏ ANOTAÇÃO — DIA ${dn}`;
+  document.getElementById('note-textarea').value=STATE.notes[dn]||'';
+  document.getElementById('delete-note-btn').style.display=STATE.notes[dn]?'block':'none';
+  openModal('modal-note');
+}
+function saveNote(){
+  const v=document.getElementById('note-textarea').value.trim();
+  if(v)STATE.notes[_noteDay]=v;else delete STATE.notes[_noteDay];
+  saveState();closeModal('modal-note');showToast(v?'✓ Anotação salva':'Anotação apagada');renderAll();
+}
+function deleteNote(){delete STATE.notes[_noteDay];saveState();closeModal('modal-note');showToast('Anotação apagada');renderAll();}
+
+// ═══════════════════════════════════════════
+//  CATCH-UP
+// ═══════════════════════════════════════════
+function getMissedDays(){
+  const dn=getTodayDayNum()||0;
+  return Array.from({length:Math.max(0,dn-1)},(_,i)=>i+1).filter(d=>!STATE.completed.has(d));
+}
+function applyCatchup(){
+  const missed=getMissedDays();
+  if(!missed.length){showToast('Nenhum dia pendente!');return;}
+  for(const d of missed){
+    STATE.completed.add(d);
+    const p=STATE.plan[d-1];if(p)STATE.partialReadings[d]=new Set(p.readings.map((_,i)=>i));
+  }
+  checkAchievements();saveState();renderAll();showToast(`✓ ${missed.length} dias marcados como concluídos`);
+}
+
+// ═══════════════════════════════════════════
+//  THEME
+// ═══════════════════════════════════════════
+function toggleTheme(){STATE.theme=STATE.theme==='dark'?'light':'dark';applyTheme();saveState();}
+function applyTheme(){
+  document.body.classList.toggle('light',STATE.theme==='light');
+  document.getElementById('theme-btn').textContent=STATE.theme==='dark'?'🌙':'☀';
+  document.getElementById('theme-meta').setAttribute('content',STATE.theme==='dark'?'#120f0a':'#f5efe3');
+}
+
+// ═══════════════════════════════════════════
+//  HEADER
+// ═══════════════════════════════════════════
+function updateHeaderStats(){
+  const done=STATE.completed.size,pct=Math.round(done/365*100);
+  document.getElementById('global-progress-bar').style.width=pct+'%';
+  document.getElementById('header-sub').textContent=
+    STATE.startDate?`${done}/365 dias • ${pct}% concluído`:'Toque em ⚙ para configurar';
+}
+
+// ═══════════════════════════════════════════
+//  RENDER: TODAY
+// ═══════════════════════════════════════════
+function renderToday(){
+  const el=document.getElementById('today-content');
+  const dn=getTodayDayNum();
+  if(!STATE.startDate||!dn||dn<1||dn>365){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">📅</div><p>Configure a data de início nas configurações para começar.</p></div>`;return;
+  }
+  const streak=calcStreak(),isDone=STATE.completed.has(dn);
+  const plan=STATE.plan[dn-1];
+  const checked=STATE.partialReadings[dn]||new Set();
+  const total=plan?plan.readings.length:0,checkedCount=isDone?total:checked.size;
+  const dt=dayNumToDate(dn),hasNote=!!STATE.notes[dn];
+  const pct=total?Math.round(checkedCount/total*100):0;
+
+  let html=`
+    <div class="today-date-block">
+      <div class="today-day-label">DIA</div>
+      <div class="today-day-num">${dn}</div>
+      <div class="today-date-str">${dt?fmtDateBR(dt):''}</div>
+    </div>
+    <div style="text-align:center;margin-bottom:18px">
+      <span class="streak-badge">🔥 ${streak===0?'Nenhum dia seguido':streak===1?'1 dia seguido':streak+' dias seguidos'}</span>
+    </div>`;
+
+  if(plan){
+    const rows=plan.readings.map((r,i)=>{
+      const isC=isDone||checked.has(i);
+      return`<li class="reading-row${isC?' checked':''}" onclick="toggleReading(${dn},${i},${total})"><div class="reading-chk">${isC?'✓':''}</div><span class="reading-text">${r}</span></li>`;
+    }).join('');
+
+    const bottom=isDone
+      ?`<div class="day-complete-banner"><span class="dcb-icon">🎉</span><div class="dcb-text"><strong>DIA CONCLUÍDO!</strong><p>Que a Palavra ilumine o seu caminho.</p></div><button class="undo-link" onclick="undoDay(${dn})">DESFAZER</button></div>`
+      :`<p style="font-size:13px;color:var(--muted);font-style:italic;text-align:center;margin-top:4px">Marque cada leitura para completar o dia automaticamente.</p>`;
+
+    html+=`<div class="card card-gold">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <span class="section-title" style="margin-bottom:0">Leitura de Hoje</span>
+        <button class="note-btn${hasNote?' has-note':''}" onclick="openNote(${dn})">${hasNote?'📝':'📄'}</button>
+      </div>
+      <div class="readings-progress">
+        <div class="readings-progress-bar"><div class="readings-progress-fill" style="width:${pct}%"></div></div>
+        <span class="readings-progress-label">${checkedCount}/${total}</span>
+      </div>
+      <ul style="list-style:none">${rows}</ul>
+      <div style="margin-top:14px">${bottom}</div>
+    </div>`;
+
+    if(hasNote){
+      html+=`<div class="card" onclick="openNote(${dn})" style="cursor:pointer">
+        <div class="section-title">Minha Anotação</div>
+        <p style="font-size:16px;color:var(--muted);font-style:italic;white-space:pre-wrap;line-height:1.6">${STATE.notes[dn].substring(0,200)}${STATE.notes[dn].length>200?'…':''}</p>
+      </div>`;
+    }
+  }
+
+  const upcoming=[];
+  for(let d=dn+1;d<=Math.min(dn+4,365);d++){const p=STATE.plan[d-1];if(p)upcoming.push({day:d,readings:p.readings});}
+  if(upcoming.length){
+    html+=`<div class="section-title" style="margin-top:4px">Próximas leituras</div><ul class="mini-list">`;
+    for(const u of upcoming){
+      const dt2=dayNumToDate(u.day);
+      html+=`<li><div class="mini-day">DIA ${u.day}</div><div class="mini-readings">${dt2?fmtDateBR(dt2)+'<br>':''}${groupForDisplay(u.readings)}</div></li>`;
+    }
+    html+=`</ul>`;
+  }
+  el.innerHTML=html;
+}
+
+// ═══════════════════════════════════════════
+//  RENDER: PLAN
+// ═══════════════════════════════════════════
+let planFilter='all';
+function setPlanFilter(btn,filter){
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');planFilter=filter;renderPlan();
+}
+function renderPlan(){
+  const el=document.getElementById('plan-list');
+  const dn=getTodayDayNum();let html='',count=0;
+  for(let d=1;d<=365;d++){
+    const p=STATE.plan[d-1];if(!p)continue;
+    const isDone=STATE.completed.has(d),isToday=d===dn;
+    const isPast=dn&&d<dn,isMissed=isPast&&!isDone;
+    const hasPartial=!isDone&&(STATE.partialReadings[d]?.size>0);
+    const hasNote=!!STATE.notes[d];
+    if(planFilter==='done'&&!isDone)continue;
+    if(planFilter==='upcoming'&&(isDone||isPast))continue;
+    if(planFilter==='missed'&&!isMissed)continue;
+    count++;
+    const dt=dayNumToDate(d);
+    const dtStr=dt?dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'';
+    let cls='plan-item';
+    if(isMissed)cls+=' past-undone';
+    else if(!isDone&&!isPast)cls+=' future-item';
+    html+=`<div class="${cls}">
+      <div class="plan-check${isDone?' done':''}${isToday&&!isDone?' today-check':''}${hasPartial?' partial':''}" onclick="toggleDay(${d})">${isDone?'✓':hasPartial?'…':''}</div>
+      <div class="plan-info" onclick="toggleDay(${d})">
+        <div class="plan-day-label">DIA ${d}${isToday?' • HOJE':''}${isMissed?' • PENDENTE':''}</div>
+        <div class="plan-day-date">${dtStr}</div>
+        <div class="plan-readings-text">${groupForDisplay(p.readings)}</div>
+      </div>
+      <button class="note-btn${hasNote?' has-note':''}" onclick="openNote(${d})">${hasNote?'📝':'📄'}</button>
+    </div>`;
+  }
+  if(!count)html=`<div class="empty-state"><div class="empty-icon">🔍</div><p>Nenhum item nesta categoria.</p></div>`;
+  el.innerHTML=html;
+}
+
+// ═══════════════════════════════════════════
+//  RENDER: CALENDAR
+// ═══════════════════════════════════════════
+function renderCalendar(){
+  const today=new Date();
+  if(!STATE.calMonth)STATE.calMonth={year:today.getFullYear(),month:today.getMonth()};
+  const{year,month}=STATE.calMonth;
+  document.getElementById('cal-month-label').textContent=fmtMonthBR(year,month);
+  const firstDay=new Date(year,month,1).getDay(),daysInM=new Date(year,month+1,0).getDate();
+  const todISO=todayISO();
+  const isoToDn={};
+  for(let d=1;d<=365;d++){const dt=dayNumToDate(d);if(dt)isoToDn[dateToISO(dt)]=d;}
+  let g='';
+  for(let i=0;i<firstDay;i++)g+=`<div class="cal-day empty"></div>`;
+  for(let day=1;day<=daysInM;day++){
+    const iso=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const dn2=isoToDn[iso];
+    const isTod=iso===todISO,isDone=dn2&&STATE.completed.has(dn2),hasNote=dn2&&!!STATE.notes[dn2];
+    let cls='cal-day';
+    if(!dn2)cls+=' no-reading';
+    if(isDone)cls+=' completed';
+    if(isTod)cls+=' today-day';
+    if(hasNote)cls+=' has-note';
+    const oc=dn2?`onclick="showCalDetail(${dn2})"`:''
+    g+=`<div class="${cls}" ${oc}>${day}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=g;
+}
+function calNav(dir){
+  let{year,month}=STATE.calMonth;
+  month+=dir;if(month<0){month=11;year--;}if(month>11){month=0;year++;}
+  STATE.calMonth={year,month};renderCalendar();document.getElementById('cal-detail').innerHTML='';
+}
+function showCalDetail(dn){
+  const p=STATE.plan[dn-1];if(!p)return;
+  const isDone=STATE.completed.has(dn),dt=dayNumToDate(dn),hasNote=!!STATE.notes[dn];
+  const rows=p.readings.map(r=>`<li style="padding:6px 0;border-bottom:1px solid var(--border);font-size:17px;list-style:none">${r}</li>`).join('');
+  document.getElementById('cal-detail').innerHTML=`
+    <div class="card" style="margin-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div><div class="plan-day-label">DIA ${dn}</div><div style="font-size:14px;color:var(--muted);font-style:italic">${dt?fmtDateBR(dt):''}</div></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="note-btn${hasNote?' has-note':''}" onclick="openNote(${dn})">${hasNote?'📝':'📄'}</button>
+          <div class="plan-check${isDone?' done':''}" style="width:36px;height:36px;font-size:16px;cursor:pointer" onclick="toggleDay(${dn})">${isDone?'✓':''}</div>
+        </div>
+      </div>
+      <ul>${rows}</ul>
+      ${hasNote?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><p style="font-size:14px;color:var(--muted);font-style:italic;white-space:pre-wrap">${STATE.notes[dn].substring(0,120)}${STATE.notes[dn].length>120?'…':''}</p></div>`:''}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  RENDER: STATS
+// ═══════════════════════════════════════════
+function renderStats(){
+  const el=document.getElementById('stats-content');
+  const total=365,done=STATE.completed.size,pct=Math.round(done/total*100);
+  const streak=calcStreak(),dn=getTodayDayNum()||0;
+  const missed=Math.max(0,Math.min(dn-1,total)-[...STATE.completed].filter(d=>d<dn).length);
+  const doneOT=[...STATE.completed].filter(d=>d<=OT_DAYS).length;
+  const doneNT=[...STATE.completed].filter(d=>d>OT_DAYS).length;
+  const pctOT=Math.round(doneOT/OT_DAYS*100),pctNT=Math.round(doneNT/(365-OT_DAYS)*100);
+  const notesCount=Object.keys(STATE.notes).length;
+
+  const achHTML=ACHIEVEMENTS.map(a=>{
+    const un=STATE.unlockedAch.has(a.id);
+    return`<div class="ach-item${un?' unlocked':''}"><span class="ach-icon">${a.icon}</span><div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div></div>`;
+  }).join('');
+
+  const missedDays=getMissedDays();
+  const catchupHTML=missedDays.length?`
+    <div class="catchup-card">
+      <div class="catchup-title">⚠ RECUPERAÇÃO DE ATRASO</div>
+      <p style="font-size:15px;color:var(--muted);font-style:italic">Você tem <strong style="color:var(--red-light)">${missedDays.length} ${missedDays.length===1?'dia pendente':'dias pendentes'}</strong> até hoje.</p>
+      <button class="catchup-chip" onclick="applyCatchup()">MARCAR TODOS OS DIAS PENDENTES COMO CONCLUÍDOS</button>
+    </div>`:'';
+
+  el.innerHTML=`
+    <div class="card card-gold" style="text-align:center">
+      <div class="stat-big"><div class="stat-num">${pct}%</div><div class="stat-label">da Bíblia lida</div></div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      <div class="progress-bar-label"><span>${done} dias concluídos</span><span>${total-done} restantes</span></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-box-num">${streak}</div><div class="stat-box-label">🔥 Sequência</div></div>
+      <div class="stat-box"><div class="stat-box-num">${done}</div><div class="stat-box-label">✓ Concluídos</div></div>
+      <div class="stat-box"><div class="stat-box-num"${missed>0?' style="color:var(--red-light)"':''}>${missed}</div><div class="stat-box-label">⚠ Pendentes</div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-box-num">${notesCount}</div><div class="stat-box-label">✍ Anotações</div></div>
+      <div class="stat-box"><div class="stat-box-num">${STATE.unlockedAch.size}/${ACHIEVEMENTS.length}</div><div class="stat-box-label">🏆 Conquistas</div></div>
+      <div class="stat-box"><div class="stat-box-num">${Math.max(0,365-dn)}</div><div class="stat-box-label">📅 Dias rest.</div></div>
+    </div>
+    ${catchupHTML}
+    <div class="card">
+      <div class="section-title">Progresso por Testamento</div>
+      <div class="testament-bar">
+        <div class="testament-label">Antigo Testamento</div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pctOT}%;background:linear-gradient(90deg,#8b6914,#c8983a)"></div></div>
+        <div class="progress-bar-label"><span>${doneOT}/${OT_DAYS} dias</span><span>${pctOT}%</span></div>
+      </div>
+      <div class="testament-bar" style="margin-bottom:0">
+        <div class="testament-label">Novo Testamento</div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pctNT}%;background:linear-gradient(90deg,#1a5c3a,#3a9d6a)"></div></div>
+        <div class="progress-bar-label"><span>${doneNT}/${365-OT_DAYS} dias</span><span>${pctNT}%</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Conquistas</div>
+      <div class="ach-grid">${achHTML}</div>
+    </div>
+    <div class="card">
+      <div class="section-title">Compartilhar</div>
+      <button class="share-btn" onclick="generateShareImage()">📸 GERAR IMAGEM DE PROGRESSO</button>
+      <p style="font-size:13px;color:var(--muted);font-style:italic;text-align:center">Baixe uma imagem para compartilhar nas redes sociais.</p>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  SHARE IMAGE
+// ═══════════════════════════════════════════
+function generateShareImage(){
+  const canvas=document.getElementById('share-canvas');
+  const W=1080,H=1080;canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  const done=STATE.completed.size,pct=Math.round(done/365*100),streak=calcStreak(),dn=getTodayDayNum()||0;
+  const isLight=STATE.theme==='light';
+  const BG=isLight?'#f5efe3':'#120f0a',BG2=isLight?'#ede4d2':'#1e1810';
+  const GOLD='#c8983a',GOLD2='#e8b84b',CREAM=isLight?'#1e1408':'#f0e0c0',MUTED=isLight?'#7a6040':'#8a7355';
+
+  // BG
+  ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+  // Outer border
+  ctx.strokeStyle=GOLD;ctx.lineWidth=6;ctx.strokeRect(28,28,W-56,H-56);
+  ctx.strokeStyle=isLight?'#c8b898':'#3a2e1e';ctx.lineWidth=2;ctx.strokeRect(38,38,W-76,H-76);
+  // Corner dots
+  ctx.fillStyle=GOLD;
+  for(const[cx,cy]of[[58,58],[W-58,58],[58,H-58],[W-58,H-58]]){ctx.beginPath();ctx.arc(cx,cy,6,0,Math.PI*2);ctx.fill();}
+
+  ctx.textAlign='center';
+  // Icon
+  ctx.font='80px serif';ctx.fillText('📖',W/2,165);
+  // Title
+  ctx.fillStyle=GOLD2;ctx.font='bold 48px serif';ctx.fillText('BÍBLIA EM 1 ANO',W/2,255);
+  // Divider
+  ctx.strokeStyle=isLight?'#c8b898':'#3a2e1e';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(120,285);ctx.lineTo(W-120,285);ctx.stroke();
+  // Big pct
+  ctx.fillStyle=CREAM;ctx.font='bold 210px serif';ctx.fillText(pct+'%',W/2,540);
+  // Label
+  ctx.fillStyle=MUTED;ctx.font='34px serif';ctx.fillText('da Bíblia lida',W/2,595);
+  // Progress bar
+  const bx=100,by=640,bw=W-200,bh=18,br=9;
+  ctx.fillStyle=BG2;ctx.beginPath();ctx.roundRect(bx,by,bw,bh,br);ctx.fill();
+  if(pct>0){
+    const g=ctx.createLinearGradient(bx,0,bx+bw,0);g.addColorStop(0,GOLD);g.addColorStop(1,GOLD2);
+    ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(bx,by,Math.max(bw*pct/100,br*2),bh,br);ctx.fill();
+  }
+  // Stats
+  ctx.font='30px serif';
+  [[`📅 Dia ${dn}/365`,-270],[`🔥 ${streak} seguidos`,0],[`✓ ${done} dias`,270]].forEach(([lbl,ox])=>{
+    ctx.fillStyle=CREAM;ctx.fillText(lbl,W/2+ox,720);
+  });
+  // Footer divider
+  ctx.strokeStyle=isLight?'#c8b898':'#3a2e1e';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(120,780);ctx.lineTo(W-120,780);ctx.stroke();
+  ctx.fillStyle=MUTED;ctx.font='26px serif';ctx.fillText('Bíblia em 1 Ano • github.io',W/2,840);
+
+  const a=document.createElement('a');a.download='progresso-biblia.png';a.href=canvas.toDataURL('image/png');a.click();
+  showToast('📸 Imagem gerada e baixada!');
+}
+
+// ═══════════════════════════════════════════
+//  RENDER ALL
+// ═══════════════════════════════════════════
+function renderAll(){updateHeaderStats();renderToday();renderPlan();renderCalendar();renderStats();}
+
+// ═══════════════════════════════════════════
+//  TAB
+// ═══════════════════════════════════════════
+function switchTab(tab){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  document.getElementById('nav-'+tab).classList.add('active');
+  setTimeout(()=>document.getElementById('page-'+tab).scrollTop=0,50);
+}
+
+// ═══════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════
+let _pendingPlan='canonical';
+function openSettings(){
+  document.getElementById('cfg-start-date').value=STATE.startDate||todayISO();
+  _pendingPlan=STATE.planType||'canonical';
+  document.querySelectorAll('.plan-radio').forEach(r=>r.classList.toggle('sel',r.dataset.plan===_pendingPlan));
+  openModal('modal-settings');
+}
+function selectPlan(el){
+  _pendingPlan=el.dataset.plan;
+  document.querySelectorAll('.plan-radio').forEach(r=>r.classList.toggle('sel',r===el));
+}
+async function saveSettings(){
+  const newDate=document.getElementById('cfg-start-date').value;
+  if(!newDate){showToast('⚠ Selecione uma data');return;}
+  const changed=_pendingPlan!==STATE.planType;
+  STATE.startDate=newDate;STATE.planType=_pendingPlan;
+  if(changed)await loadPlan();
+  saveState();closeModal('modal-settings');renderAll();showToast('✓ Configurações salvas!');
+}
+function resetProgress(){
+  if(!confirm('Apagar todo o progresso? Esta ação não pode ser desfeita.'))return;
+  STATE.completed.clear();STATE.partialReadings={};STATE.notes={};STATE.unlockedAch.clear();
+  saveState();closeModal('modal-settings');renderAll();showToast('Progresso apagado.');
+}
+
+// ═══════════════════════════════════════════
+//  SETUP
+// ═══════════════════════════════════════════
+function showSetup(){
+  const d=new Date();document.getElementById('setup-start-date').value=`${d.getFullYear()}-01-01`;
+  openModal('modal-setup');
+}
+function finishSetup(){
+  const date=document.getElementById('setup-start-date').value;
+  if(!date){showToast('⚠ Selecione uma data');return;}
+  STATE.startDate=date;saveState();closeModal('modal-setup');renderAll();showToast('Jornada iniciada! Que Deus te guie. ✝');
+}
+
+// ═══════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id);}));
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+let _tt;
+function showToast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+async function init(){
+  loadState();applyTheme();await loadPlan();
+  initFirebase();
+  updateAuthUI();
+  if(!STATE.startDate)showSetup();
+  renderAll();
+}
+init();
+</script>
+</body>
+</html>
