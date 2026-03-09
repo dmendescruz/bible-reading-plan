@@ -244,8 +244,8 @@
     .firebase-setup ol{padding-left:18px;color:var(--muted);font-size:14px;line-height:2}
     .firebase-setup a{color:var(--gold-light);text-decoration:underline}
     .firebase-setup code{font-size:12px;background:var(--bg2);padding:2px 6px;border-radius:4px;color:var(--gold-light)}
-  </style>
 
+    /* MISC */
     ::-webkit-scrollbar{width:4px}
     ::-webkit-scrollbar-track{background:transparent}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
@@ -401,14 +401,13 @@
 //  Crie um projeto em console.firebase.google.com
 //  e substitua os valores abaixo.
 // ═══════════════════════════════════════════
-const firebaseConfig = {
-  apiKey: "AIzaSyBonuYdY0cIYpYuDip9cy5YtgmtYKRZxw8",
-  authDomain: "bible-reading-plan-f3409.firebaseapp.com",
-  databaseURL: "https://bible-reading-plan-f3409-default-rtdb.firebaseio.com",
-  projectId: "bible-reading-plan-f3409",
-  storageBucket: "bible-reading-plan-f3409.firebasestorage.app",
-  messagingSenderId: "1063778832012",
-  appId: "1:1063778832012:web:b9c9224eab83f32cfe75a9"
+const FIREBASE_CONFIG = {
+  apiKey:            "SUA_API_KEY",
+  authDomain:        "SEU_PROJETO.firebaseapp.com",
+  projectId:         "SEU_PROJETO",
+  storageBucket:     "SEU_PROJETO.appspot.com",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId:             "SEU_APP_ID",
 };
 
 // ═══════════════════════════════════════════
@@ -589,15 +588,17 @@ function openAuthModal(){
       <div class="modal-title">☁ SINCRONIZAÇÃO</div>
       <div class="firebase-setup">
         <div class="firebase-setup-title">⚙ CONFIGURAÇÃO NECESSÁRIA</div>
-        <p style="font-size:14px;color:var(--muted);margin-bottom:12px;font-style:italic">Para ativar o login e a sincronização entre dispositivos, você precisa configurar um projeto Firebase gratuito:</p>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:12px;font-style:italic">Para ativar login e sincronização entre dispositivos, configure um projeto Firebase gratuito:</p>
         <ol>
-          <li>Acesse <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a></li>
-          <li>Crie um projeto (ex: <code>biblia-1-ano</code>)</li>
-          <li>Vá em <strong>Authentication → Sign-in method</strong> e ative <strong>Google</strong> e/ou <strong>Facebook</strong></li>
-          <li>Vá em <strong>Firestore Database</strong> → Criar banco de dados → Modo de produção</li>
-          <li>Vá em <strong>Configurações do projeto → Seus apps → Web</strong>, copie o objeto <code>firebaseConfig</code></li>
-          <li>Abra o arquivo <code>biblia-1-ano.html</code>, localize a seção <code>FIREBASE_CONFIG</code> e substitua os valores</li>
-          <li>Em <strong>Authentication → Settings → Domínios autorizados</strong>, adicione seu domínio GitHub Pages</li>
+          <li>Acesse <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> e clique em <strong>Adicionar projeto</strong></li>
+          <li>Dê um nome (ex: <code>biblia-1-ano</code>), desative o Google Analytics se quiser e clique em <strong>Criar projeto</strong></li>
+          <li>Na tela do projeto, clique no ícone <strong>&lt;/&gt;</strong> (Web) para registrar seu app. Dê um apelido e clique em <strong>Registrar app</strong>. Copie o objeto <code>firebaseConfig</code> exibido</li>
+          <li>No menu lateral esquerdo, expanda <strong>Criação (Build)</strong> → clique em <strong>Authentication</strong> → <strong>Primeiros passos</strong></li>
+          <li>Na aba <strong>Método de login</strong>, clique em <strong>Google</strong>, ative-o e salve. Para Facebook, você precisará de um App ID e App Secret criados em <a href="https://developers.facebook.com" target="_blank">developers.facebook.com</a> — copie também o URI de redirecionamento OAuth exibido e adicione-o nas configurações do seu app no Facebook</li>
+          <li>No menu lateral, vá em <strong>Criação → Firestore Database</strong> → <strong>Criar banco de dados</strong> → escolha a localização → selecione <strong>Iniciar no modo de produção</strong> → <strong>Criar</strong></li>
+          <li>Na aba <strong>Regras</strong> do Firestore, substitua o conteúdo por:<br><code style="font-size:11px;line-height:1.8">rules_version='2';<br>service cloud.firestore {<br>&nbsp;match /databases/{db}/documents {<br>&nbsp;&nbsp;match /users/{uid} {<br>&nbsp;&nbsp;&nbsp;allow read,write: if request.auth.uid==uid;<br>&nbsp;&nbsp;}<br>&nbsp;}<br>}</code><br>e clique em <strong>Publicar</strong></li>
+          <li>Em <strong>Authentication → aba Configurações → Domínios autorizados</strong>, clique em <strong>Adicionar domínio</strong> e insira <code>SEUUSUARIO.github.io</code></li>
+          <li>Abra o arquivo <code>biblia-1-ano.html</code>, localize a seção <code>FIREBASE_CONFIG</code> no início do script e substitua os valores pelo <code>firebaseConfig</code> copiado no passo 3</li>
         </ol>
       </div>
       <button class="btn-secondary" onclick="closeModal('modal-auth')">FECHAR</button>`;
