@@ -455,18 +455,7 @@ async function signInWithGoogle(){
   }
 }
 
-async function signInWithFacebook(){
-  if(!fbAuth) return;
-  try{
-    const provider = new firebase.auth.FacebookAuthProvider();
-    await fbAuth.signInWithPopup(provider);
-    closeModal('modal-auth');
-    showToast('✓ Conectado com Facebook!');
-  } catch(e){
-    if(e.code !== 'auth/popup-closed-by-user')
-      showToast('⚠ Erro ao entrar: ' + e.message);
-  }
-}
+
 
 async function signOutUser(){
   if(!fbAuth) return;
@@ -594,7 +583,7 @@ function openAuthModal(){
           <li>Dê um nome (ex: <code>biblia-1-ano</code>), desative o Google Analytics se quiser e clique em <strong>Criar projeto</strong></li>
           <li>Na tela do projeto, clique no ícone <strong>&lt;/&gt;</strong> (Web) para registrar seu app. Dê um apelido e clique em <strong>Registrar app</strong>. Copie o objeto <code>firebaseConfig</code> exibido</li>
           <li>No menu lateral esquerdo, expanda <strong>Criação (Build)</strong> → clique em <strong>Authentication</strong> → <strong>Primeiros passos</strong></li>
-          <li>Na aba <strong>Método de login</strong>, clique em <strong>Google</strong>, ative-o e salve. Para Facebook, você precisará de um App ID e App Secret criados em <a href="https://developers.facebook.com" target="_blank">developers.facebook.com</a> — copie também o URI de redirecionamento OAuth exibido e adicione-o nas configurações do seu app no Facebook</li>
+          <li>Na aba <strong>Método de login</strong>, clique em <strong>Google</strong>, ative-o e salve</li>
           <li>No menu lateral, vá em <strong>Criação → Firestore Database</strong> → <strong>Criar banco de dados</strong> → escolha a localização → selecione <strong>Iniciar no modo de produção</strong> → <strong>Criar</strong></li>
           <li>Na aba <strong>Regras</strong> do Firestore, substitua o conteúdo por:<br><code style="font-size:11px;line-height:1.8">rules_version='2';<br>service cloud.firestore {<br>&nbsp;match /databases/{db}/documents {<br>&nbsp;&nbsp;match /users/{uid} {<br>&nbsp;&nbsp;&nbsp;allow read,write: if request.auth.uid==uid;<br>&nbsp;&nbsp;}<br>&nbsp;}<br>}</code><br>e clique em <strong>Publicar</strong></li>
           <li>Em <strong>Authentication → aba Configurações → Domínios autorizados</strong>, clique em <strong>Adicionar domínio</strong> e insira <code>SEUUSUARIO.github.io</code></li>
@@ -632,10 +621,6 @@ function openAuthModal(){
       <button class="login-btn" onclick="signInWithGoogle()">
         <span class="login-btn-icon">🔵</span>
         <div class="login-btn-text"><strong>ENTRAR COM GOOGLE</strong><span>Rápido e seguro</span></div>
-      </button>
-      <button class="login-btn" onclick="signInWithFacebook()">
-        <span class="login-btn-icon">🔷</span>
-        <div class="login-btn-text"><strong>ENTRAR COM FACEBOOK</strong><span>Use sua conta do Facebook</span></div>
       </button>
       <p style="font-size:13px;color:var(--muted);font-style:italic;text-align:center;margin-top:8px">O app funciona normalmente sem login.<br>O progresso fica salvo neste dispositivo.</p>
       <button class="btn-secondary" onclick="closeModal('modal-auth')">CONTINUAR SEM LOGIN</button>`;
