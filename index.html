@@ -15,25 +15,33 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
+    /* ═══════════════════════════════════════
+       PALETA: Ink & Ivory — Dark
+    ═══════════════════════════════════════ */
     :root{
-      --bg:#120f0a;--bg2:#1e1810;--bg3:#2a2015;
-      --gold:#c8983a;--gold-light:#e8b84b;
-      --cream:#f0e0c0;--muted:#8a7355;--border:#3a2e1e;
-      --green:#3a7d5a;--green-bg:#1a3d2a;
+      --bg:#111111;--bg2:#1c1c1c;--bg3:#272727;
+      --gold:#d4882a;--gold-light:#f0a030;
+      --cream:#f4f0e8;--muted:#808080;--border:#333333;
+      --green:#3a7a58;--green-bg:#0e2418;--green-bright:#4a9e72;
       --red:#8b3a3a;--red-light:#e87070;
-      --card-grad:linear-gradient(135deg,#1e1810 60%,#2a1f08);
+      --card-grad:linear-gradient(135deg,#1c1c1c 60%,#242018);
       --font-title:'Cinzel',Georgia,serif;
       --font-body:'Crimson Text',Georgia,serif;
       --nav-h:64px;--header-h:72px;
     }
+
+    /* ═══════════════════════════════════════
+       PALETA: Ink & Ivory — Light (Cool Linen)
+    ═══════════════════════════════════════ */
     body.light{
-      --bg:#f5efe3;--bg2:#ede4d2;--bg3:#e2d5be;
-      --gold:#8b5e1a;--gold-light:#a07010;
-      --cream:#1e1408;--muted:#7a6040;--border:#c8b898;
-      --green:#2a6045;--green-bg:#d4edd8;
+      --bg:#f6f6f6;--bg2:#ebebeb;--bg3:#dedede;
+      --gold:#b86820;--gold-light:#d47c28;
+      --cream:#141414;--muted:#707070;--border:#cccccc;
+      --green:#2a6040;--green-bg:#d0e8d8;
       --red:#7a2a2a;--red-light:#c05050;
-      --card-grad:linear-gradient(135deg,#ede4d2 60%,#f0e4c8);
+      --card-grad:linear-gradient(135deg,#ebebeb 60%,#e8e4dc);
     }
+
 
     html,body{height:100%;background:var(--bg);color:var(--cream);font-family:var(--font-body);font-size:18px;line-height:1.5;overflow:hidden;transition:background .3s,color .3s}
 
@@ -533,6 +541,7 @@
 <canvas id="share-canvas"></canvas>
 <div id="toast"></div>
 
+
 <script>
 // ═══════════════════════════════════════════
 //  ★ FIREBASE CONFIG — preencha com seus dados
@@ -1008,7 +1017,7 @@ function toggleTheme(){STATE.theme=STATE.theme==='dark'?'light':'dark';applyThem
 function applyTheme(){
   document.body.classList.toggle('light',STATE.theme==='light');
   document.getElementById('theme-btn').textContent=STATE.theme==='dark'?'🌙':'☀';
-  document.getElementById('theme-meta').setAttribute('content',STATE.theme==='dark'?'#120f0a':'#f5efe3');
+  document.getElementById('theme-meta').setAttribute('content',STATE.theme==='dark'?'#111111':'#f6f6f6');
 }
 
 // ═══════════════════════════════════════════
